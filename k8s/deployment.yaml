@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fcj-chatbot
+  labels:
+    app: fcj-chatbot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fcj-chatbot
+  template:
+    metadata:
+      labels:
+        app: fcj-chatbot
+    spec:
+      containers:
+      - name: chatbot
+        image: <YOUR_ECR_REPO>/fcj-chatbot:latest
+        ports:
+        - containerPort: 8501
+          name: http
+        env:
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fcj-secrets
+              key: groq-api-key
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 40
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: vectorstore
+          mountPath: /app/vectorstore
+      volumes:
+      - name: vectorstore
+        persistentVolumeClaim:
+          claimName: vectorstore-pvc
