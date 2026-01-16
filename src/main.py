@@ -81,83 +81,58 @@ if "loaded" not in st.session_state:
     show_loading_page()
     st.session_state.loaded = True
 
-if "theme" not in st.session_state:
-    st.session_state.theme = "light"
 if "user_avatar" not in st.session_state:
     st.session_state.user_avatar = "👤"
 if "bot_avatar" not in st.session_state:
     st.session_state.bot_avatar = "🤖"
 
-theme_colors = {
-    "light": {"bg": "#ffffff", "text": "#000000", "sidebar": "#f0f2f6"},
-    "dark": {"bg": "#0e1117", "text": "#ffffff", "sidebar": "#262730"},
-    "blue": {"bg": "#1e3a5f", "text": "#ffffff", "sidebar": "#2c5282"},
-    "green": {"bg": "#1a4d2e", "text": "#ffffff", "sidebar": "#2d6a4f"},
-}
-
-current_theme = theme_colors[st.session_state.theme]
-
-st.markdown(f"""
+st.markdown("""
 <style>
-    .stApp {{
-        background-color: {current_theme['bg']};
-        color: {current_theme['text']};
-    }}
-    .stSidebar {{
-        background-color: {current_theme['sidebar']};
-    }}
-    .stMarkdown, .stText, p, span, div, label, h1, h2, h3, h4, h5, h6 {{
-        color: {current_theme['text']} !important;
-    }}
-    .stChatMessage {{
-        background-color: #D1D1D1 !important;
-        color: #000000 !important;
-    }}
-    .stChatMessage p, .stChatMessage span, .stChatMessage div {{
-        color: #000000 !important;
-    }}
-    .stSelectbox > div > div, .stButton > button {{
-        background-color: #D1D1D1 !important;
-        color: #000000 !important;
-        border: 1px solid #999 !important;
-    }}
-    .stSelectbox label, .stButton button {{
-        color: #000000 !important;
-    }}
-    .stSelectbox div[data-baseweb="select"] > div {{
-        background-color: #D1D1D1 !important;
-        color: #000000 !important;
-    }}
-    .stSelectbox option {{
-        background-color: #D1D1D1 !important;
-        color: #000000 !important;
-    }}
-    div[data-testid="stHeader"] {{
-        background-color: #D1D1D1 !important;
-    }}
-    .warning-box {{
+    .stApp {
+        background-color: #0e1117;
+        color: #ffffff;
+    }
+    .stSidebar {
+        background-color: #0e1117;
+    }
+    .stMarkdown, .stText, p, span, div, label, h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
+    }
+    .stChatMessage {
+        background-color: #1e1e1e !important;
+        color: #ffffff !important;
+    }
+    .stChatMessage p, .stChatMessage span, .stChatMessage div {
+        color: #ffffff !important;
+    }
+    .stButton > button {
+        background-color: #262730 !important;
+        color: #ffffff !important;
+        border: 1px solid #444 !important;
+    }
+    .warning-box {
         background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
         padding: 15px;
         border-radius: 10px;
         border-left: 5px solid #c92a2a;
         margin: 10px 0;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }}
-    .warning-box p {{
+    }
+    .warning-box p {
         color: white !important;
         margin: 0;
         font-weight: 600;
         font-size: 0.9em;
-    }}
+    }
 </style>
 """, unsafe_allow_html=True)
 
 st.header("☁️ First Cloud AI Journey Assistant")
 st.markdown(
     """
-<div style='background: #D1D1D1; 
+<div style='background: #0e1117; 
             padding: 10px; border-radius: 10px; margin-bottom: 20px;'>
-    <p style='color: #000000; text-align: center; margin: 0; font-size: 1.1em; font-weight: bold;'>
+    <p style='color: #ffffff; text-align: center; margin: 0; font-size: 1.1em; font-weight: bold;'>
         🚀 Chatbot hỗ trợ cộng đồng FCAJ - AWS Vietnam
     </p>
 </div>
@@ -166,48 +141,6 @@ st.markdown(
 )
 
 with st.sidebar:
-    st.markdown("### 🎨 Tùy chỉnh giao diện")
-    
-    theme_option = st.selectbox(
-        "Chọn chế độ",
-        ["light", "dark", "blue", "green"],
-        format_func=lambda x: {"light": "☀️ Sáng", "dark": "🌙 Tối", "blue": "🔵 Xanh dương", "green": "🟢 Xanh lá"}[x],
-        index=["light", "dark", "blue", "green"].index(st.session_state.theme)
-    )
-    
-    if theme_option != st.session_state.theme:
-        st.session_state.theme = theme_option
-        st.rerun()
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Avatar của bạn**")
-        avatar_files = [f"{i}.png" for i in range(1, 11)]
-        user_avatar_choice = st.selectbox(
-            "Chọn avatar",
-            ["👤 Mặc định"] + avatar_files,
-            key="user_avatar_select",
-            label_visibility="collapsed"
-        )
-        if user_avatar_choice != "👤 Mặc định":
-            st.session_state.user_avatar = f"public/static/image/{user_avatar_choice}"
-        else:
-            st.session_state.user_avatar = "👤"
-    
-    with col2:
-        st.markdown("**Avatar chatbot**")
-        bot_avatar_choice = st.selectbox(
-            "Chọn avatar",
-            ["🤖 Mặc định"] + avatar_files,
-            key="bot_avatar_select",
-            label_visibility="collapsed"
-        )
-        if bot_avatar_choice != "🤖 Mặc định":
-            st.session_state.bot_avatar = f"public/static/image/{bot_avatar_choice}"
-        else:
-            st.session_state.bot_avatar = "🤖"
-    
-    st.markdown("---")
     st.markdown("### 📚 Tài nguyên FCAJ")
     st.markdown(
         """
