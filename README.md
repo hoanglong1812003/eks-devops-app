@@ -1,24 +1,41 @@
-# FCAJ Chatbot - DevOps Ready
+# FCAJ Chatbot
 
-Chatbot hỗ trợ cộng đồng First Cloud AI Journey (FCAJ) - AWS Vietnam, được chuẩn hóa theo chuẩn DevOps/Cloud/EKS.
+Chatbot hỗ trợ cộng đồng First Cloud AI Journey (FCAJ) - AWS Vietnam, sử dụng RAG (Retrieval-Augmented Generation) với LangChain và Groq LLM.
 
-## 📁 Cấu trúc dự án
+## Tổng quan
+
+Dự án này là một chatbot AI được xây dựng để hỗ trợ cộng đồng FCAJ trong việc:
+- Trả lời câu hỏi về AWS và Cloud Computing
+- Cung cấp thông tin về quy định và nội quy FCAJ
+- Hỗ trợ học tập và tìm kiếm tài liệu
+- Tư vấn về kiến trúc AWS
+
+## Công nghệ sử dụng
+
+- **Framework**: Streamlit
+- **LLM**: Groq (llama-3.1-8b-instant)
+- **Embeddings**: HuggingFace (paraphrase-multilingual-MiniLM-L12-v2)
+- **Vector Store**: FAISS
+- **Orchestration**: LangChain
+- **Containerization**: Docker
+- **Orchestration**: Kubernetes
+
+## Cấu trúc dự án
 
 ```
-eks-devops-app/
-│
-├── src/                      # Source code
-│   ├── main.py              # Entry point
-│   ├── process_docs.py      # Document processing
-│   ├── config/              # Configuration
+app/
+├── src/
+│   ├── config/              # Configuration management
 │   │   ├── __init__.py
-│   │   └── settings.py      # Centralized settings
+│   │   └── settings.py
 │   ├── services/            # Business logic
 │   │   ├── __init__.py
-│   │   └── rag_service.py   # RAG chain service
-│   └── utils/               # Utilities
-│       ├── __init__.py
-│       └── helpers.py       # Helper functions
+│   │   └── rag_service.py
+│   ├── utils/               # Utility functions
+│   │   ├── __init__.py
+│   │   └── helpers.py
+│   ├── main.py              # Application entry point
+│   └── process_docs.py      # Document processing
 │
 ├── k8s/                     # Kubernetes manifests
 │   ├── deployment.yaml
@@ -27,229 +44,358 @@ eks-devops-app/
 │   ├── pvc.yaml
 │   └── secret.yaml.example
 │
-├── .github/                 # CI/CD workflows
-│   └── workflows/
-│       └── ci-cd.yaml
+├── .github/workflows/       # CI/CD pipeline
+│   └── ci-cd.yaml
 │
 ├── data/                    # Training documents (gitignored)
 ├── vectorstore/             # Vector database (gitignored)
-├── public/                  # Static assets
-│   └── static/
+├── public/static/           # Static assets
 │
-├── .streamlit/              # Streamlit config
-│   └── config.toml
-│
-├── requirements.txt         # Python dependencies
-├── .env.example            # Environment template
-├── Dockerfile              # Docker configuration
-├── docker-compose.yml      # Docker Compose config
-├── .dockerignore           # Docker ignore rules
-├── .gitignore              # Git ignore rules
-└── README.md               # Documentation
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── .env.example
+└── README.md
 ```
 
-## 🚀 Quick Start
+## Yêu cầu hệ thống
 
-### 1. Local Development
+- Python 3.11+
+- Docker & Docker Compose (optional)
+- 4GB RAM minimum
+- GROQ API Key
+
+## Cài đặt và chạy
+
+### 1. Chạy local
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
-cd eks-devops-app
+git clone <repository-url>
+cd app
 
-# Create virtual environment
+# Tạo virtual environment
 python -m venv venv
+venv\Scripts\activate  # Windows
 source venv/bin/activate  # Linux/Mac
-# or
-venv\Scripts\activate     # Windows
 
-# Install dependencies
+# Cài đặt dependencies
 pip install -r requirements.txt
 
-# Setup environment
-cp .env.example .env
-# Edit .env and add your GROQ_API_KEY
+# Tạo file .env
+copy .env.example .env
+# Chỉnh sửa .env và thêm GROQ_API_KEY
 
-# Process documents (first time only)
+# Xử lý documents (lần đầu tiên)
 python src/process_docs.py
 
-# Run application
+# Chạy application
 streamlit run src/main.py
 ```
 
-### 2. Docker
+Truy cập: http://localhost:8501
+
+### 2. Chạy với Docker
 
 ```bash
-# Build image
-docker build -t fcj-chatbot .
+# Tạo file .env
+copy .env.example .env
+# Chỉnh sửa .env và thêm GROQ_API_KEY
 
-# Run with docker-compose
+# Build và chạy
 docker-compose up -d
 
-# View logs
+# Xem logs
 docker-compose logs -f
 
-# Stop
+# Dừng
 docker-compose down
 ```
 
-### 3. Deploy to AWS EKS
+### 3. Deploy lên Kubernetes/EKS
 
-#### Prerequisites
-- AWS CLI configured
+#### Yêu cầu
 - kubectl installed
+- AWS CLI configured
 - EKS cluster created
 - ECR repository created
 
-#### Steps
+#### Các bước deploy
 
 ```bash
-# 1. Build and push to ECR
-aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin <YOUR_ECR_URI>
+# 1. Build và push Docker image
+aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin <ECR_URI>
 docker build -t fcj-chatbot .
-docker tag fcj-chatbot:latest <YOUR_ECR_URI>/fcj-chatbot:latest
-docker push <YOUR_ECR_URI>/fcj-chatbot:latest
+docker tag fcj-chatbot:latest <ECR_URI>:latest
+docker push <ECR_URI>:latest
 
 # 2. Update kubeconfig
 aws eks update-kubeconfig --name fcj-eks-cluster --region ap-southeast-1
 
-# 3. Create secret
+# 3. Tạo Kubernetes Secret
 kubectl create secret generic fcj-secrets \
   --from-literal=groq-api-key=<YOUR_GROQ_API_KEY>
 
-# 4. Deploy to EKS
+# 4. Update deployment.yaml
+# Thay <YOUR_ECR_REPO> bằng ECR URI trong k8s/deployment.yaml
+
+# 5. Deploy
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/pvc.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 
-# 5. Check status
+# 6. Kiểm tra
 kubectl get pods
 kubectl get svc fcj-chatbot-service
 ```
 
-## 🔧 Configuration
+## Cấu hình
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `GROQ_API_KEY` | Groq API key | Required |
-| `EMBEDDING_MODEL` | HuggingFace embedding model | paraphrase-multilingual-MiniLM-L12-v2 |
-| `LLM_MODEL` | LLM model name | llama-3.1-8b-instant |
-| `LLM_TEMPERATURE` | Temperature for LLM | 0.1 |
-| `VECTORSTORE_PATH` | Path to vectorstore | vectorstore |
-| `DATA_PATH` | Path to training data | data |
+Tạo file `.env` từ `.env.example`:
 
-## 📦 CI/CD Pipeline
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
 
-GitHub Actions workflow tự động:
+### Cấu hình nâng cao
+
+Chỉnh sửa `src/config/settings.py`:
+
+```python
+class Settings:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    LLM_MODEL = "llama-3.1-8b-instant"
+    LLM_TEMPERATURE = 0.1
+    VECTORSTORE_PATH = "vectorstore"
+    DATA_PATH = "data"
+    CHUNK_SIZE = 500
+    CHUNK_OVERLAP = 100
+```
+
+## CI/CD
+
+Dự án sử dụng GitHub Actions để tự động:
 1. Build Docker image
 2. Push to Amazon ECR
 3. Deploy to EKS cluster
-4. Rolling update deployment
+4. Rolling update
 
-### Required GitHub Secrets
+### Setup GitHub Secrets
+
+Thêm secrets trong GitHub repository:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 
-## 🔒 Security Best Practices
+Workflow sẽ tự động chạy khi push code lên branch `main` hoặc `develop`.
 
-✅ **Implemented:**
-- Secrets không được commit vào Git
-- Environment variables qua `.env` file
-- Kubernetes Secrets cho sensitive data
-- `.dockerignore` và `.gitignore` đầy đủ
-- Health checks cho container
-- Resource limits trong Kubernetes
+## Kiến trúc
 
-❌ **Never commit:**
-- `.env` file
-- API keys
-- Credentials
-- Training data
-- Vector database
+### Data Flow
 
-## 📊 Monitoring & Health Checks
-
-- **Liveness Probe**: `/_stcore/health` (port 8501)
-- **Readiness Probe**: `/_stcore/health` (port 8501)
-- **Metrics**: Streamlit built-in metrics
-
-## 🛠️ Development
-
-### Adding New Features
-
-1. Create feature branch
-```bash
-git checkout -b feature/your-feature
+```
+User Input
+    ↓
+Streamlit UI (main.py)
+    ↓
+Query Normalization (utils/helpers.py)
+    ↓
+RAG Chain (services/rag_service.py)
+    ↓
+Vector Store Retrieval (FAISS)
+    ↓
+LLM Processing (Groq)
+    ↓
+Response to User
 ```
 
-2. Make changes in `src/` directory
+### Components
 
-3. Test locally
-```bash
-streamlit run src/main.py
-```
+- **main.py**: Streamlit UI và user interaction
+- **rag_service.py**: RAG chain implementation với LangChain
+- **settings.py**: Centralized configuration
+- **helpers.py**: Utility functions (normalization, encoding)
+- **process_docs.py**: Document processing và vectorstore creation
 
-4. Commit and push
-```bash
-git add .
-git commit -m "feat: your feature description"
-git push origin feature/your-feature
-```
+## Troubleshooting
 
-5. Create Pull Request
+### Lỗi: "Vectorstore not found"
 
-### Code Structure
-
-- **src/main.py**: Streamlit UI và main logic
-- **src/services/**: Business logic (RAG, LLM)
-- **src/utils/**: Helper functions
-- **src/config/**: Configuration management
-
-## 📝 Troubleshooting
-
-### Issue: Vectorstore not found
 ```bash
 python src/process_docs.py
 ```
 
-### Issue: Docker build fails
+### Lỗi: Docker build fails
+
 ```bash
 docker system prune -a
 docker-compose build --no-cache
 ```
 
-### Issue: EKS deployment fails
+### Lỗi: Port already in use
+
 ```bash
-kubectl describe pod <pod-name>
-kubectl logs <pod-name>
+# Dừng container cũ
+docker stop <container-name>
+docker rm <container-name>
+
+# Hoặc
+docker-compose down
 ```
 
-## 🤝 Contributing
+### Lỗi: Kubernetes pod không start
 
-1. Fork the repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
+```bash
+# Xem logs
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
 
-## 📄 License
+# Kiểm tra secrets
+kubectl get secrets
+```
+
+## Development
+
+### Thêm documents mới
+
+1. Thêm file PDF/TXT vào thư mục `data/`
+2. Chạy lại: `python src/process_docs.py`
+3. Restart application
+
+### Thay đổi LLM model
+
+Chỉnh sửa `src/config/settings.py`:
+
+```python
+LLM_MODEL = "llama-3.1-70b-versatile"  # hoặc model khác
+```
+
+### Thay đổi embedding model
+
+Chỉnh sửa `src/config/settings.py`:
+
+```python
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+```
+
+## Testing
+
+### Test cấu trúc dự án
+
+```bash
+python test_structure.py
+```
+
+### Test imports
+
+```python
+from src.config import settings
+from src.services.rag_service import setup_rag_chain
+from src.utils.helpers import normalize_query
+
+print("All imports successful!")
+```
+
+## Security
+
+### Best Practices đã implement
+
+- Không commit secrets vào Git
+- Sử dụng environment variables
+- Kubernetes Secrets cho sensitive data
+- .gitignore và .dockerignore đầy đủ
+- Health checks cho containers
+- Resource limits trong Kubernetes
+
+### Không được commit
+
+- File `.env`
+- API keys
+- Credentials
+- Training data (thư mục `data/`)
+- Vector database (thư mục `vectorstore/`)
+
+## Monitoring
+
+### Health Checks
+
+- **Endpoint**: `/_stcore/health`
+- **Port**: 8501
+- **Liveness Probe**: 40s initial delay, 30s period
+- **Readiness Probe**: 30s initial delay, 10s period
+
+### Logs
+
+```bash
+# Docker
+docker-compose logs -f
+
+# Kubernetes
+kubectl logs -f deployment/fcj-chatbot
+kubectl logs -f <pod-name>
+```
+
+### Metrics
+
+```bash
+# Kubernetes resources
+kubectl top pods
+kubectl top nodes
+```
+
+## Scaling
+
+### Manual scaling
+
+```bash
+kubectl scale deployment fcj-chatbot --replicas=3
+```
+
+### Auto scaling (HPA)
+
+```bash
+kubectl autoscale deployment fcj-chatbot \
+  --cpu-percent=70 \
+  --min=2 \
+  --max=5
+```
+
+## Contributing
+
+1. Fork repository
+2. Tạo feature branch: `git checkout -b feature/your-feature`
+3. Commit changes: `git commit -m "Add your feature"`
+4. Push to branch: `git push origin feature/your-feature`
+5. Tạo Pull Request
+
+## License
 
 MIT License - see LICENSE file
 
-## 👥 Team
+## Team
 
 - **Sư phụ**: Nguyễn Gia Hưng
 - **Admin Team**: Lữ Hoàn Thiện, Trần Đại Vĩ, Huỳnh Hoàng Long, Phạm Hoàng Quy, Bùi Hoàng Việt, Đặng Thị Minh Thư, Lý Kiên Huy, Nguyễn Đỗ Thành Đạt
 
-## 🔗 Links
+## Links
 
-- [FCAJ Rules](https://rules.fcjuni.com/)
-- [YouTube Channel](https://www.youtube.com/@AWSStudyGroup)
-- [Learning Materials](https://cloudjourney.awsstudygroup.com/)
+- FCAJ Rules: https://rules.fcjuni.com/
+- YouTube Channel: https://www.youtube.com/@AWSStudyGroup
+- Learning Materials: https://cloudjourney.awsstudygroup.com/
+
+## Support
+
+Nếu gặp vấn đề, vui lòng:
+1. Kiểm tra phần Troubleshooting
+2. Xem logs của application
+3. Tạo issue trên GitHub repository
+4. Liên hệ FCAJ Community
 
 ---
 
-🚀 **Powered by FCAJ Team** | © 2026 First Cloud AI Journey
+**Version**: 1.0.0  
+**Last Updated**: 2025  
+**Status**: Production Ready
