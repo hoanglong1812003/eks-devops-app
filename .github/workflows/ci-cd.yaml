@@ -2,7 +2,7 @@ name: CI - Build & Push Image to ECR
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, feature/chat-history ]
   pull_request:
     branches: [ main ]
 
