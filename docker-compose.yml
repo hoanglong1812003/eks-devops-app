@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fcj-chatbot
     ports:
       - "8501:8501"
 
@@ -19,14 +18,6 @@ services:
       - torch-cache:/tmp/torch
 
     restart: unless-stopped
-
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: 4G
-        reservations:
-          memory: 2G
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
