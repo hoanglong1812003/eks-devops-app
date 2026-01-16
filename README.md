@@ -1,4 +1,4 @@
-# FCAJ Chatbot
+# FCAJ Chatbot 12345
 
 Chatbot hỗ trợ cộng đồng First Cloud AI Journey (FCAJ) - AWS Vietnam, sử dụng RAG (Retrieval-Augmented Generation) với LangChain và Groq LLM.
 
